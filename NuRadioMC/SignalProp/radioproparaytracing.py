@@ -381,7 +381,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
     def set_minimizer_tolerance(self, xtol=1e-3*units.deg, ztol=1e-3*units.meter):
         self.__xtol = xtol
         self.__ztol = ztol
-        
+
+
     def raytracer_minimizer(self, n_reflections=0):
         """
         Uses RadioPropa to find all the numerical ray tracing solutions between sphere x1 and x2.
@@ -415,7 +416,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
         ## define observer
         obs2 = radiopropa.Observer()
         obs2.setDeactivateOnDetection(True)
-        plane_channel = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(*x2), radiopropa.Vector3d(*u)))
+        w = (u / np.linalg.norm(u)) #* NormalScale
+        plane_channel = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(*x2), radiopropa.Vector3d(*w)))
         obs2.add(plane_channel)
         sim.add(obs2)
 
@@ -452,7 +454,18 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
         def delta_z_squared(cot_theta):
             return delta_z(cot_theta)**2
-        
+
+        def find_second_root(theta_a,theta_b):
+                try:
+                    root2 = optimize.brentq(delta_z, a=cot(theta_a), b=cot(theta_b), xtol=self.__ztol)
+                    theta2 = arccot(root2)
+                    if(np.round(theta2, 2) not in np.round(detected_theta, 2)):
+                        detected_theta.append(theta2)
+                        detected_rays.append(shoot_ray(theta2))
+                    return root2
+                except RuntimeError:
+                    pass
+
         t1 = time.time()
         #we minimize the cotangens of the zenith to reflect the same resolution in z to the different angles (vertical vs horizontal) 
         root1 = optimize.minimize(delta_z_squared,x0=cot(theta_direct),method='Nelder-Mead',options={'xatol':self.__xtol**2,'fatol':self.__ztol**2})
@@ -470,17 +483,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
             delta_z_vertical = delta_z(cot(res_angle))
             delta_z_direct = delta_z(cot(theta_direct))
             
-            def find_second_root(theta_a,theta_b):
-                try:
-                    root2 = optimize.brentq(delta_z, a=cot(theta_a), b=cot(theta_b), xtol=self.__ztol)
-                    theta2 = arccot(root2)
-                    if(np.round(theta2, 2) not in np.round(detected_theta, 2)):
-                        detected_theta.append(theta2)
-                        detected_rays.append(shoot_ray(theta2))
-                    return root2
-                except RuntimeError:
-                    pass
-
+            
             if np.sign(delta_z_min) != np.sign(delta_z_vertical):
                 root2 = find_second_root(theta_a = theta_min, theta_b = res_angle)  
             elif np.sign(delta_z_plus) != np.sign(delta_z_direct):
