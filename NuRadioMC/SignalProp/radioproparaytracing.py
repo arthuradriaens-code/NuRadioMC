@@ -106,7 +106,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
         self.set_config(config=config)
         self._ice_model = self._medium.get_ice_model_radiopropa()
-        self._ice_model.remove_module("air boundary")
+        self._ice_model.remove_module("air observer")
 
         self.set_minimizer_tolerance()
         self._shower_axis = None ## this is given so we can limit the rays that are checked around the cherenkov angle
@@ -515,6 +515,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
                 new_scanning_range = np.arange(launch_lower[iL], launch_upper[iL]+step, step)
                 theta_scanning_range = np.concatenate((theta_scanning_range, new_scanning_range))
 
+            print(theta_scanning_range)
             for theta in theta_scanning_range:
                 ray_dir = hp.spherical_to_cartesian(theta, phi_direct)
                 
