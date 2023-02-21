@@ -443,7 +443,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
  
         v = (self._X2 - self._X1)
         u = copy.deepcopy(v)
-        u[2] = 0
+        u[0] = 0 #Horizontal plane
         theta_direct, phi_direct = hp.cartesian_to_spherical(*v) # zenith and azimuth for the direct linear ray solution (radians)
         cherenkov_angle = np.arccos(1. / self._medium.get_index_of_refraction(self._X1))
         
@@ -504,8 +504,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
             w = (u / np.linalg.norm(u)) * 2*sphere_size
             boundary_behind_channel = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(*(X2 + w)), radiopropa.Vector3d(*w)))
             obs2.add(boundary_behind_channel)
-            boundary_above_surface = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(0, 0, 1*radiopropa.meter), radiopropa.Vector3d(0, 0, 1)))
-            obs2.add(boundary_above_surface)
+            #boundary_above_surface = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(0, 0, 1*radiopropa.meter), radiopropa.Vector3d(0, 0, 1)))
+            #obs2.add(boundary_above_surface)
             sim.add(obs2)
             
             #create total scanning range from the upper and lower thetas of the bundles
@@ -515,7 +515,6 @@ class radiopropa_ray_tracing(ray_tracing_base):
                 new_scanning_range = np.arange(launch_lower[iL], launch_upper[iL]+step, step)
                 theta_scanning_range = np.concatenate((theta_scanning_range, new_scanning_range))
 
-            print(theta_scanning_range)
             for theta in theta_scanning_range:
                 ray_dir = hp.spherical_to_cartesian(theta, phi_direct)
                 
@@ -535,7 +534,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
                     while len(current_rays) > 0:
                         next_rays = []
                         for ray in current_rays:
-                            if channel.checkDetection(ray.get()) == radiopropa.DETECTED:
+                            if channel.checkDetection(ray.get()) == radiopropa.DETECTED: 
+                                #this isn't the case app.
                                 detected_rays.append(ray)
                                 result = {}
                                 if n_reflections == 0:
@@ -580,7 +580,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
         if LetsMinimize:
             iterative = False
-            ##define module list for simulation, this needs to be redone to get rid of the spherical observer
+            ##define module list for simulation, 
+            ##this needs to be redone to get rid of the spherical observer
             sim = radiopropa.ModuleList()
             sim.add(radiopropa.PropagationCK(self._ice_model.get_scalar_field(), 1E-8, .001, 1.)) ## add propagation to module list
             for module in self._ice_model.get_modules().values():
@@ -598,9 +599,9 @@ class radiopropa_ray_tracing(ray_tracing_base):
             sim.add(obs)
 
             # handy?
-            boundary_above_surface = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(0, 0, 1*radiopropa.meter), radiopropa.Vector3d(0, 0, 1)))
-            obs2.add(boundary_above_surface)
-            sim.add(obs2)
+            #boundary_above_surface = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(0, 0, 1*radiopropa.meter), radiopropa.Vector3d(0, 0, 1)))
+            #obs2.add(boundary_above_surface)
+            #sim.add(obs2)
 
             detected_rays = []
             detected_theta = []
