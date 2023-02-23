@@ -440,7 +440,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
  
         v = (self._X2 - self._X1)
         u = copy.deepcopy(v)
-        u[0] = 0 #Horizontal plane
+        u[2] = 0
         theta_direct, phi_direct = hp.cartesian_to_spherical(*v) # zenith and azimuth for the direct linear ray solution (radians)
         cherenkov_angle = np.arccos(1. / self._medium.get_index_of_refraction(self._X1))
         
