@@ -400,8 +400,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
             self.__logger.error('NoneType: start or endpoint not initialized')
             raise TypeError('NoneType: start or endpoint not initialized')
       
-        def get_ray(theta,phi):
-            ray_dir = hp.spherical_to_cartesian(theta,phi)
+        def get_ray(theta,phi_direct):
+            ray_dir = hp.spherical_to_cartesian(theta,phi_direct)
             if ray_dir.shape==(3,1): ray_dir = ray_dir.T[0] #doesn't always give the right shape
             source = radiopropa.Source()
             source.add(radiopropa.SourcePosition(radiopropa.Vector3d(*X1)))
@@ -432,7 +432,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
         def MinimizeAble(lower,upper):
             #This checks if there are 2 distinct regions, takes about 10^-6% of the total time
             #if ((len(lower) == 2) and (len(upper)==2)): #fails for 1 possible path
-            if ((len(lower) > 0) and (len(upper)>0)): 
+            if ((len(lower) == 1) and (len(upper) == 1)):  #only 1 solution
                 return (lower[0] < upper[0])
             else:
                 return False
@@ -577,6 +577,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
 #this part is at fault app.
         if LetsMinimize:
             iterative = False
+
             sim.remove(4) #remove spherical observer
             sim.remove(4) #remove plane behind observer
             obs = radiopropa.Observer()
@@ -606,7 +607,6 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
                 root = optimize.minimize(delta_z_squared,x0=InitGuess,bounds=bounds,options={'xatol':self.__xtol**2,'fatol':self.__ztol**2},method='Nelder-Mead')
                 theta = arccot(root.x)
-                print(sim.showModules())
 
                 detected_theta.append(theta)
                 detected_rays.append(shoot_ray(theta)) 
