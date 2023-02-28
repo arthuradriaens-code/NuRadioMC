@@ -431,8 +431,9 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
         def MinimizeAble(lower,upper):
             #This checks if there are 2 distinct regions, takes about 10^-6% of the total time
-            if ((len(lower) == 2) and (len(upper)==2)):
-                return ((lower[1] > upper[0]) and (lower[0] < upper[0]) and (lower[1] < upper[1]))
+            #if ((len(lower) == 2) and (len(upper)==2)): #fails for 1 possible path
+            if ((len(lower) > 0) and (len(upper)>0)): 
+                return (lower[0] < upper[0])
             else:
                 return False
 
@@ -532,7 +533,6 @@ class radiopropa_ray_tracing(ray_tracing_base):
                         next_rays = []
                         for ray in current_rays:
                             if channel.checkDetection(ray.get()) == radiopropa.DETECTED: 
-                                #this isn't the case app.
                                 detected_rays.append(ray)
                                 result = {}
                                 if n_reflections == 0:
@@ -565,41 +565,30 @@ class radiopropa_ray_tracing(ray_tracing_base):
                         pass
                     launch_theta_prev = launch_theta
                 isMinimizeAble = MinimizeAble(launch_lower,launch_upper) 
-                #check if we have two distinct launch regions so we can minimize
+                #check if we have a distinct launch region so we can minimize
                 #accuracy is chosen above time duration, so this will take a while
-                if isMinimizeAble and (s == 0): # speed hack: Only check on first iteration
+                if isMinimizeAble: # No speed hack as accuracy > speed
                     LetsMinimize = True
                     break
 
             else:
                 #if detected_rays is empty, no solutions where found and the tracer is terminated
                 break
-
+#this part is at fault app.
         if LetsMinimize:
             iterative = False
-            ##define module list for simulation, 
-            ##this needs to be redone to get rid of the spherical observer
-            sim = radiopropa.ModuleList()
-            sim.add(radiopropa.PropagationCK(self._ice_model.get_scalar_field(), 1E-8, .001, 1.)) ## add propagation to module list
-            for module in self._ice_model.get_modules().values():
-                sim.add(module)
-            sim.add(radiopropa.MaximumTrajectoryLength(self._max_traj_length*(radiopropa.meter/units.meter)))
-
-            ## define observer for detection (channel)
+            sim.remove(4) #remove spherical observer
+            sim.remove(4) #remove plane behind observer
             obs = radiopropa.Observer()
             obs.setDeactivateOnDetection(True)
-            #a bigger normal value makes the calculation faster, a smaller one more precise
-            #NormalScale = 2.5
-            w = (u / np.linalg.norm(u)) #* NormalScale
+
+            w = (u / np.linalg.norm(u)) 
             plane_channel = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(*X2), radiopropa.Vector3d(*w)))
             obs.add(plane_channel)
             sim.add(obs)
 
-            # handy?
-            #boundary_above_surface = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(0, 0, 1*radiopropa.meter), radiopropa.Vector3d(0, 0, 1)))
-            #obs2.add(boundary_above_surface)
-            #sim.add(obs2)
-
+            #print(sim.showModules())
+            #sim looks good...
             detected_rays = []
             detected_theta = []
             #we minimize the cotangens of the zenith to reflect the same resolution in z to the different angles (vertical vs horizontal)
@@ -617,6 +606,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
                 root = optimize.minimize(delta_z_squared,x0=InitGuess,bounds=bounds,options={'xatol':self.__xtol**2,'fatol':self.__ztol**2},method='Nelder-Mead')
                 theta = arccot(root.x)
+                print(sim.showModules())
+
                 detected_theta.append(theta)
                 detected_rays.append(shoot_ray(theta)) 
 
