@@ -387,10 +387,10 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
     def raytracer_hybrid_minimizer(self,n_reflections=0):
         """
-        Uses RadioPropa to first find all the numerical ray tracing solutions between sphere x1 
-        and sphere x2 for a big sphere. After which it uses the scipy optimize.minimize module
+        Uses RadioPropa to first find all the numerical ray tracing solutions
+        between sphere x1 and sphere x2 for a big sphere. After which it uses
+        the scipy optimize.minimize module
         to find the best path in these angle intervals. 
-        Tracer does not work for reflective bottoms or secondary creation at the moment
         """
 
         try:
