@@ -430,8 +430,9 @@ class radiopropa_ray_tracing(ray_tracing_base):
             return delta_z(cot_theta)**2
 
         def MinimizeAble(lower,upper):
-            #This checks if there are 2 distinct regions, takes about 10^-6% of the total time
-            #if ((len(lower) == 2) and (len(upper)==2)): #fails for 1 possible path
+            #This checks if there are 2 distinct regions, takes
+            #about 10^-6% of the total time #if ((len(lower) == 2)
+            #and (len(upper)==2)): #fails for 1 possible path
             if ((len(lower) == 1) and (len(upper) == 1)):  #only 1 solution
                 return (lower[0] < upper[0])
             else:
@@ -565,9 +566,11 @@ class radiopropa_ray_tracing(ray_tracing_base):
                         pass
                     launch_theta_prev = launch_theta
                 isMinimizeAble = MinimizeAble(launch_lower,launch_upper) 
+
                 #check if we have a distinct launch region so we can minimize
                 #accuracy is chosen above time duration, so this will take a while
-                if isMinimizeAble: # No speed hack as accuracy > speed
+                #isMinimizeAble = False #minimizer doesn't work with air...
+                if isMinimizeAble and s==1 : # No speed hack as accuracy > speed
                     LetsMinimize = True
                     break
 
@@ -577,22 +580,24 @@ class radiopropa_ray_tracing(ray_tracing_base):
 #this part is at fault app.
         if LetsMinimize:
             iterative = False
-
             sim.remove(4) #remove spherical observer
             sim.remove(4) #remove plane behind observer
-            obs = radiopropa.Observer()
-            obs.setDeactivateOnDetection(True)
-
+            sim.remove(1) #remove discontinuity, 
+            #doesn't work otherwise... WHY NOT???
+            obs_plane = radiopropa.Observer()
+            obs_plane.setDeactivateOnDetection(True)
             w = (u / np.linalg.norm(u)) 
             plane_channel = radiopropa.ObserverSurface(radiopropa.Plane(radiopropa.Vector3d(*X2), radiopropa.Vector3d(*w)))
-            obs.add(plane_channel)
-            sim.add(obs)
+            obs_plane.add(plane_channel)
+            sim.add(obs_plane)
 
-            #print(sim.showModules())
+            #sim.showModules()
             #sim looks good...
             detected_rays = []
             detected_theta = []
-            #we minimize the cotangens of the zenith to reflect the same resolution in z to the different angles (vertical vs horizontal)
+            #we minimize the cotangens of the zenith to
+            #reflect the same resolution in z to the different
+            #angles (vertical vs horizontal)
 
             for i in range(len(launch_lower)):
                 ll = launch_lower[i]
@@ -607,7 +612,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
                 root = optimize.minimize(delta_z_squared,x0=InitGuess,bounds=bounds,options={'xatol':self.__xtol**2,'fatol':self.__ztol**2},method='Nelder-Mead')
                 theta = arccot(root.x)
-
+                print("theta hybrid:")
+                print(theta)
                 detected_theta.append(theta)
                 detected_rays.append(shoot_ray(theta)) 
 
@@ -623,6 +629,8 @@ class radiopropa_ray_tracing(ray_tracing_base):
             self._results = results
             self.__used_method = 'iterator'
             launch_bundles = np.transpose([launch_lower, launch_upper])
+            print("theta iterative:")
+            print(launch_upper)
             return launch_bundles,iterative
 
 
