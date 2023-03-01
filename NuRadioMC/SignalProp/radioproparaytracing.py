@@ -412,6 +412,15 @@ class radiopropa_ray_tracing(ray_tracing_base):
         def shoot_ray(theta):
             ray = get_ray(theta,phi_direct)
             sim.run(ray, True)
+            current_rays = [ray]
+            globalmin = 10
+            index = 0
+            rays = []
+            #silly little thing but it works...
+            for i,secondary in enumerate(ray.secondaries):
+                ray_endpoint = self.get_path_candidate(secondary)[-1]
+                if i == 0:
+                    ray = secondary
             return ray
 
         def cot(x):
@@ -582,7 +591,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
             iterative = False
             sim.remove(4) #remove spherical observer
             sim.remove(4) #remove plane behind observer
-            sim.remove(1) #remove discontinuity, 
+            #sim.remove(1) #remove discontinuity, 
             #doesn't work otherwise... WHY NOT???
             #Omg it's because of secundaries...
             obs_plane = radiopropa.Observer()
