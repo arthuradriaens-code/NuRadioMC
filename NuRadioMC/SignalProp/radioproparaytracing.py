@@ -584,6 +584,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
             sim.remove(4) #remove plane behind observer
             sim.remove(1) #remove discontinuity, 
             #doesn't work otherwise... WHY NOT???
+            #Omg it's because of secundaries...
             obs_plane = radiopropa.Observer()
             obs_plane.setDeactivateOnDetection(True)
             w = (u / np.linalg.norm(u)) 
