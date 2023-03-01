@@ -412,15 +412,11 @@ class radiopropa_ray_tracing(ray_tracing_base):
         def shoot_ray(theta):
             ray = get_ray(theta,phi_direct)
             sim.run(ray, True)
-            current_rays = [ray]
-            globalmin = 10
-            index = 0
-            rays = []
             #silly little thing but it works...
-            for i,secondary in enumerate(ray.secondaries):
-                ray_endpoint = self.get_path_candidate(secondary)[-1]
-                if i == 0:
-                    ray = secondary
+            #for i,secondary in enumerate(ray.secondaries):
+            #    ray_endpoint = self.get_path_candidate(secondary)[-1]
+            #    if i == 0:
+            #        ray = secondary
             return ray
 
         def cot(x):
@@ -432,7 +428,18 @@ class radiopropa_ray_tracing(ray_tracing_base):
         def delta_z(cot_theta):
             theta = arccot(cot_theta)
             ray = shoot_ray(theta)
-            ray_endpoint = self.get_path_candidate(ray)[-1]
+            secondaries = []
+            globaldeltaz = 10000000
+            newray = ray
+            #now let's look which secondary is closest:
+            for secondary in ray.secondaries:
+                secondaries.append(secondary)
+                ray_endpoint = self.get_path_candidate(secondary)[-1]
+                deltaz = (ray_endpoint-self._X2)[2]
+                if np.abs(deltaz) < globaldeltaz:
+                    globaldeltaz = deltaz
+                    newray = secondary
+            ray_endpoint = self.get_path_candidate(newray)[-1]
             return (ray_endpoint-self._X2)[2]
 
         def delta_z_squared(cot_theta):
@@ -625,7 +632,18 @@ class radiopropa_ray_tracing(ray_tracing_base):
                 print("theta hybrid:")
                 print(theta)
                 detected_theta.append(theta)
-                detected_rays.append(shoot_ray(theta)) 
+                ray = shoot_ray(theta)
+                secondaries = []
+                globaldeltaz = 10000
+                for secondary in ray.secondaries:
+                    secondaries.append(secondary)
+                    ray_endpoint = self.get_path_candidate(secondary)[-1]
+                    deltaz = (ray_endpoint-self._X2)[2]
+                    if deltaz < globaldeltaz:
+                        globaldeltaz = deltaz
+                        newray = secondary
+
+                detected_rays.append(newray) 
 
             self._rays = detected_rays
             self._results =  [{'reflection':0,'reflection_case':1} for ray in detected_rays]
