@@ -579,7 +579,7 @@ class radiopropa_ray_tracing(ray_tracing_base):
                 #check if we have a distinct launch region so we can minimize
                 #accuracy is chosen above time duration, so this will take a while
                 #isMinimizeAble = False #minimizer doesn't work with air...
-                if isMinimizeAble and s==1 : # No speed hack as accuracy > speed
+                if isMinimizeAble and s==1 : # Reverse speed hack as to force refraction
                     LetsMinimize = True
                     break
 
