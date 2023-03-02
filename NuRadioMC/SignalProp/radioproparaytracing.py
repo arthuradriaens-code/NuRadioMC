@@ -629,8 +629,6 @@ class radiopropa_ray_tracing(ray_tracing_base):
 
                 root = optimize.minimize(delta_z_squared,x0=InitGuess,bounds=bounds,options={'xatol':self.__xtol**2,'fatol':self.__ztol**2},method='Nelder-Mead')
                 theta = arccot(root.x)
-                print("theta hybrid:")
-                print(theta)
                 detected_theta.append(theta)
                 ray = shoot_ray(theta)
                 secondaries = []
@@ -657,8 +655,6 @@ class radiopropa_ray_tracing(ray_tracing_base):
             self._results = results
             self.__used_method = 'iterator'
             launch_bundles = np.transpose([launch_lower, launch_upper])
-            print("theta iterative:")
-            print(launch_upper)
             return launch_bundles,iterative
 
 
