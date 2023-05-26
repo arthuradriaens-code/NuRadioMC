@@ -148,8 +148,8 @@ class readRNOGData:
         root_trigger_keys = [
             'trigger_info.rf_trigger', 'trigger_info.force_trigger',
             'trigger_info.pps_trigger', 'trigger_info.ext_trigger',
-            'trigger_info.radiant_trigger', 'trigger_info.lt_trigger',
-            'trigger_info.surface_trigger'
+            'trigger_info.radiant_trigger', 'trigger_info.lt_trigger'
+            #,trigger_info.surface_trigger #this gives an error in new uproot, idk why.
         ]
         self.__t = time.time()
         # Note: reading single events is inefficient...
